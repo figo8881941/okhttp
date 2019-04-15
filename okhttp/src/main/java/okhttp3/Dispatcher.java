@@ -125,9 +125,11 @@ public final class Dispatcher {
 
   synchronized void enqueue(AsyncCall call) {
     if (runningAsyncCalls.size() < maxRequests && runningCallsForHost(call) < maxRequestsPerHost) {
+      //如果没有超过限制，就放到正在运行队列中，并在线程池中执行
       runningAsyncCalls.add(call);
       executorService().execute(call);
     } else {
+      //如果超过最大并发请求数，或者是同一个host的请求数超过最大限制，就先放到ready队列
       readyAsyncCalls.add(call);
     }
   }
