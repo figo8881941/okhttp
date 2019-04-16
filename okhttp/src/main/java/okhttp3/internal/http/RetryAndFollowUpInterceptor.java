@@ -137,6 +137,8 @@ public final class RetryAndFollowUpInterceptor implements Interceptor {
       }
 
       // Attach the prior response if it exists. Such responses never have a body.
+      // 上一次请求返回的重定向响应结果
+      // 第一次为null，如果发生了重定向，就不为null
       if (priorResponse != null) {
         response = response.newBuilder()
             .priorResponse(priorResponse.newBuilder()
@@ -145,9 +147,11 @@ public final class RetryAndFollowUpInterceptor implements Interceptor {
             .build();
       }
 
+      // 判断是否需要重定向
       Request followUp = followUpRequest(response);
 
       if (followUp == null) {
+        // 如果不需要重定向，就直接返回结果
         if (!forWebSocket) {
           streamAllocation.release();
         }
@@ -156,6 +160,7 @@ public final class RetryAndFollowUpInterceptor implements Interceptor {
 
       closeQuietly(response.body());
 
+      // 判断重定向次数是否超过限制
       if (++followUpCount > MAX_FOLLOW_UPS) {
         streamAllocation.release();
         throw new ProtocolException("Too many follow-up requests: " + followUpCount);
@@ -166,6 +171,7 @@ public final class RetryAndFollowUpInterceptor implements Interceptor {
         throw new HttpRetryException("Cannot retry streamed HTTP body", response.code());
       }
 
+      // 判断重定向Url跟原来的Url是否一致，如果不一致，需要重新构建StreamAllocation
       if (!sameConnection(response, followUp.url())) {
         streamAllocation.release();
         streamAllocation = new StreamAllocation(
