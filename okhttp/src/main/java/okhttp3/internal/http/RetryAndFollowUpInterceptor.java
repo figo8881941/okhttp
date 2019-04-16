@@ -140,6 +140,7 @@ public final class RetryAndFollowUpInterceptor implements Interceptor {
       // 上一次请求返回的重定向响应结果
       // 第一次为null，如果发生了重定向，就不为null
       if (priorResponse != null) {
+        // 如果上一次发生了重定向，就把上一次重定向返回的结果设置到这一次的结果里面
         response = response.newBuilder()
             .priorResponse(priorResponse.newBuilder()
                     .body(null)
